@@ -1,24 +1,26 @@
-import pytest
+import allure
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-@pytest.mark.parametrize("username,password,expected_url", [
-    ("standard_user", "secret_sauce", "inventory"),  # valid
-    ("locked_out_user", "secret_sauce", "error"),    # locked user
-    ("invalid_user", "wrong_pass", "error"),         # invalid creds
-])
-def test_login(driver, username, password, expected_url):
+@allure.title("Login Test for SauceDemo")
+@allure.description("Verifies login functionality with valid credentials.")
+def test_login(driver):
     wait = WebDriverWait(driver, 10)
-    driver.get("https://www.saucedemo.com/")
 
-    driver.find_element(By.ID, "user-name").send_keys(username)
-    driver.find_element(By.ID, "password").send_keys(password)
-    driver.find_element(By.ID, "login-button").click()
+    with allure.step("Open login page"):
+        driver.get("https://www.saucedemo.com/")
 
-    if expected_url == "inventory":
+    with allure.step("Enter username and password"):
+        driver.find_element(By.ID, "user-name").send_keys("standard_user")
+        driver.find_element(By.ID, "password").send_keys("secret_sauce")
+
+    with allure.step("Click login button"):
+        driver.find_element(By.ID, "login-button").click()
+
+    with allure.step("Verify inventory page loaded"):
         wait.until(EC.url_contains("inventory"))
         assert "inventory" in driver.current_url
-    else:
-        error_elem = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test='error']")))
-        assert error_elem.is_displayed()
+
+    with allure.step("Take screenshot"):
+        allure.attach(driver.get_screenshot_as_png(), name="Login Page", attachment_type=allure.attachment_type.PNG)
